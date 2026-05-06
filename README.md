@@ -47,6 +47,18 @@ CONFLICT: DATABASE_URL
 envpatch patch .env.local --keys API_KEY,DEBUG --from .env.example
 ```
 
+### Validate a `.env` file against a template
+
+```bash
+envpatch validate .env --template .env.example
+```
+
+This checks that all keys defined in `.env.example` are present in `.env`, reporting any that are missing:
+
+```
+Missing keys: SECRET_KEY, REDIS_URL
+```
+
 ### Options
 
 | Flag | Description |
