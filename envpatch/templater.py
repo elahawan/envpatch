@@ -57,3 +57,19 @@ def template_from_path(src_path: str, options: Optional[TemplateOptions] = None)
 
     env = parse_env_file(src_path)
     return generate_template(env, options)
+
+
+def write_template(src_path: str, dest_path: str, options: Optional[TemplateOptions] = None) -> None:
+    """Generate a redacted template from *src_path* and write it to *dest_path*.
+
+    Args:
+        src_path: Path to the source .env file to read and redact.
+        dest_path: Path where the rendered template will be written.
+        options: Optional :class:`TemplateOptions` controlling redaction behaviour.
+    """
+    template = template_from_path(src_path, options)
+    lines = [entry.raw for entry in template.entries]
+    with open(dest_path, "w", encoding="utf-8") as fh:
+        fh.write("\n".join(lines))
+        if lines:
+            fh.write("\n")
