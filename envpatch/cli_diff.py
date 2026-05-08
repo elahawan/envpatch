@@ -30,15 +30,22 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def _read_env_file(path: str) -> EnvFile:
+    """Read and parse an .env file, raising FileNotFoundError if missing."""
+    with open(path) as f:
+        return EnvFile.parse(f.read())
+
+
 def run_diff(args: argparse.Namespace) -> int:
+    """Execute the diff command and return the exit code."""
     try:
-        base_env = EnvFile.parse(open(args.base).read())
+        base_env = _read_env_file(args.base)
     except FileNotFoundError:
         print(f"Error: base file not found: {args.base}", file=sys.stderr)
         return 2
 
     try:
-        other_env = EnvFile.parse(open(args.other).read())
+        other_env = _read_env_file(args.other)
     except FileNotFoundError:
         print(f"Error: other file not found: {args.other}", file=sys.stderr)
         return 2
