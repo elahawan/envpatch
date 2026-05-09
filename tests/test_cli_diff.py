@@ -99,4 +99,16 @@ def test_run_diff_produces_output(tmp_path, capsys):
     args = make_args(base=str(base), other=str(other), exit_code=False)
     run_diff(args)
     captured = capsys.readouterr()
-    assert captured.out != ""
+    assert len(captured.out) > 0
+
+
+def test_run_diff_identical_produces_no_output(tmp_path, capsys):
+    """Verify that identical files produce no output to stdout."""
+    base = tmp_path / "base.env"
+    other = tmp_path / "other.env"
+    base.write_text(IDENTICAL_CONTENT)
+    other.write_text(IDENTICAL_CONTENT)
+    args = make_args(base=str(base), other=str(other), exit_code=False)
+    run_diff(args)
+    captured = capsys.readouterr()
+    assert captured.out == ""
