@@ -39,7 +39,7 @@ def test_build_parser_no_color_flag():
 def test_build_parser_exit_code_flag():
     parser = build_parser()
     args = parser.parse_args(["a.env", "b.env", "--exit-code"])
-    args.exit_code is True
+    assert args.exit_code is True
 
 
 def test_run_diff_missing_base(tmp_path, capsys):
@@ -88,3 +88,15 @@ def test_run_diff_different_no_exit_code_flag(tmp_path):
     args = make_args(base=str(base), other=str(other), exit_code=False)
     code = run_diff(args)
     assert code == 0
+
+
+def test_run_diff_produces_output(tmp_path, capsys):
+    """Verify that differing files produce some output to stdout."""
+    base = tmp_path / "base.env"
+    other = tmp_path / "other.env"
+    base.write_text(BASE_CONTENT)
+    other.write_text(OTHER_CONTENT)
+    args = make_args(base=str(base), other=str(other), exit_code=False)
+    run_diff(args)
+    captured = capsys.readouterr()
+    assert captured.out != ""
