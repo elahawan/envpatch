@@ -27,6 +27,34 @@ def _sort_key(entry: EnvEntry, ignore_case: bool) -> str:
     return key.lower() if ignore_case else key
 
 
+def _group_entries(entries: List[EnvEntry], group_comments: bool) -> tuple[List[List[EnvEntry]], List[EnvEntry]]:
+    """Partition *entries* into groups and a trailing list of comment/blank lines.
+
+    When *group_comments* is True, consecutive comment and blank lines that
+    precede a key=value entry are bundled into the same group as that entry so
+    they travel with it during sorting.  Standalone comment/blank lines that
+    are not followed by a kv entry are returned separately as *trailing*.
+
+    Returns:
+        groups:   list of entry groups (each group is a list of EnvEntry).
+        trailing: leftover comment/blank entries after the last kv entry.
+    """
+    groups: List[List[EnvEntry]] = []
+    pending: List[EnvEntry] = []
+
+    for entry in entries:
+        if entry.key is None:  # comment or blank
+            if group_comments:
+                pending.append(entry)
+            else:
+                groups.append([entry])
+        else:
+            groups.append(pending + [entry])
+            pending = []
+
+    return groups, pending
+
+
 def sort_env_file(env: EnvFile, options: Optional[SortOptions] = None) -> EnvFile:
     """Return a new EnvFile with entries sorted according to *options*.
 
@@ -40,22 +68,7 @@ def sort_env_file(env: EnvFile, options: Optional[SortOptions] = None) -> EnvFil
     if options.order is SortOrder.ORIGINAL:
         return EnvFile(entries=list(env.entries), path=env.path)
 
-    # Group leading comments/blanks with the next kv entry.
-    groups: List[List[EnvEntry]] = []
-    pending: List[EnvEntry] = []
-
-    for entry in env.entries:
-        if entry.key is None:  # comment or blank
-            if options.group_comments:
-                pending.append(entry)
-            else:
-                groups.append([entry])
-        else:
-            groups.append(pending + [entry])
-            pending = []
-
-    # Any trailing comments/blanks that have no following kv entry.
-    trailing = pending
+    groups, trailing = _group_entries(env.entries, options.group_comments)
 
     reverse = options.order is SortOrder.ALPHA_DESC
 
